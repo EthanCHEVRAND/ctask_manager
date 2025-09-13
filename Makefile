@@ -6,21 +6,21 @@ OBJDIR = obj
 TARGET = $(BINDIR)/task
 
 SOURCES = $(wildcard $(SRCDIR)/*.c)
-OBJECTS = $(patsubst $(SRCDIR/%.c, $(OBJDIR)/%.o, $(SOURCES)))
+OBJECTS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SOURCES))
 
 .PHONY: all clean run
 all: $(TARGET)
 
-$(TARGET): $(OBJECTS) | ($BINDIR)
+$(TARGET): $(OBJECTS) | $(BINDIR)
 	$(CC) $(CFLAGS) -o $@ $(OBJECTS)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BINDIR)
+$(BINDIR):
 	mkdir -p $(BINDIR)
 
-$(OBJDIR)
+$(OBJDIR):
 	mkdir -p $(OBJDIR)
 
 clean:

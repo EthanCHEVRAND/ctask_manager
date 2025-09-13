@@ -57,13 +57,13 @@ int next_id(const TaskList *tl) {
     return max+1 ;
 }
 
-int add_task(TaskList *tl, const char *desc, int priority) {
+int add_task(TaskList *tl, const char *desc, int priority, const char **tags, size_t tag_count) {
     if (!desc) return -1 ;
     if (ensure_cap(tl, tl->len+1) != 0) return -1 ;
     Task *t = &tl->items[tl->len] ;
     t->id = next_id(tl) ;
     t->done = false ;
-    t->priority = priority :
+    t->priority = priority ;
 
     time_t now = time(NULL) ;
     struct tm *tm = localtime(&now) ;
@@ -76,7 +76,7 @@ int add_task(TaskList *tl, const char *desc, int priority) {
         t->tags = malloc(sizeof(char*) * tag_count) ;
         t->tag_count = 0 ;
         for (size_t i = 0 ; i < tag_count ; i++) {
-            t->tags[t->tag_count++] = strdup(tags[i]) ;
+            t->tags[t->tag_count++] = strdup_nullsafe(tags[i]) ;
         }
     } else {
         t->tags = NULL ;
@@ -108,7 +108,7 @@ int remove_task(TaskList *tl, int id) {
     for (size_t i=0 ; i<tl->len ; i++) if (tl->items[i].id == id) { idx = i ; break ; }
     if (idx == (size_t)-1) return -1 ;
     free_task(&tl->items[idx]) ;
-    for (size_t i=idx ; i+1<tl->len : i++) tl->items[i] = tl->items[i+1] ;
+    for (size_t i=idx ; i+1<tl->len ; i++) tl->items[i] = tl->items[i+1] ;
     tl->len-- ;
     return 0 ;
 }
@@ -126,7 +126,7 @@ int load_tasks(TaskList *tl) {
 
     cJSON *root = cJSON_Parse(data) ;
     free(data) ;
-    if (!root || cJSON_IsArray(root)) { cJSON_Delete(root) ; return -1 ; }
+    if (!root || !cJSON_IsArray(root)) { cJSON_Delete(root) ; return -1 ; }
 
     int n = cJSON_GetArraySize(root) ;
     for (int i = 0 ; i<n ; i++) {
@@ -148,13 +148,13 @@ int load_tasks(TaskList *tl) {
 
         cJSON *json_tags = cJSON_GetObjectItem(obj, "tags") ;
         if (json_tags && cJSON_IsArray(json_tags)) {
-            int n = cJSON_GetArraySize(json_args) ;
+            int n = cJSON_GetArraySize(json_tags) ;
             t->tags = malloc(sizeof(char*) * n) ;
             t->tag_count = 0 ;
             for (int j = 0 ; j < n ; j++) {
                 cJSON *tag = cJSON_GetArrayItem(json_tags, j) ;
                 if (cJSON_IsString(tag)) {
-                    t->tags[t->tag_count++] = strdup(tag->valuestring) ;
+                    t->tags[t->tag_count++] = strdup_nullsafe(tag->valuestring) ;
                 }
             }
         } else {
@@ -171,12 +171,13 @@ int save_tasks(const TaskList *tl) {
     for (size_t i=0 ; i<tl->len ; i++) {
         const Task *t = &tl->items[i] ;
         cJSON *obj = cJSON_CreateObject() ;
-        cJSON_AddNumberTooObject(obj, "id", t->id) ;
+        cJSON_AddNumberToObject(obj, "id", t->id) ;
         cJSON_AddBoolToObject(obj, "done", t->done) ;
         cJSON_AddStringToObject(obj, "created_at", t->created_at ? t->created_at : "") ;
         cJSON_AddStringToObject(obj, "desc", t->desc ? t->desc : "") ;
+        cJSON_AddNumberToObject(obj, "priority", t->priority) ;
         cJSON_AddItemToArray(root, obj) ;
-        cJSON *json_args = cJSON_CreateArray() ;
+        cJSON *json_tags = cJSON_CreateArray() ;
         for (size_t j = 0 ; j < t->tag_count ; j++) {
             cJSON_AddItemToArray(json_tags, cJSON_CreateString(t->tags[j])) ;
         }
