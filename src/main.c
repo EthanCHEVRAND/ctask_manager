@@ -12,6 +12,10 @@ static void usage(const char *prog) {
     printf("    rm <id>             Remove task\n") ;
 }
 
+// TODO fix tags when listing
+// TODO add --tag option to list command
+// TODO make simplified commands (ctask_man ...)
+// TODO add simplified option (eg: --priority, -p)
 int main(int argc, char **argv) {
     if (argc < 2) { usage(argv[0]) ; return 1 ; }
 
@@ -66,7 +70,7 @@ int main(int argc, char **argv) {
         for (size_t i=0 ; i<tl.len ; i++) {
             Task *t = &tl.items[i] ;
             if (!show_all && t->done) continue ;
-            printf("%d [%c] (%d) %s - %s\n", t->id, t->done ? 'x' : ' ',t->priority,  t->created_at ? t->created_at : " ", t->desc ? t->desc : " ") ;
+            printf("%d [%c] (prio:%d) %s\n  -> %s\n", t->id, t->done ? 'x' : ' ',t->priority,  t->created_at ? t->created_at : " ", t->desc ? t->desc : " ") ;
             if (t->tag_count > 0) {
                 printf(" (tags: ") ;
                 for (size_t j = 0 ; j < t->tag_count ; j++) {

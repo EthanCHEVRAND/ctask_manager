@@ -68,7 +68,8 @@ int add_task(TaskList *tl, const char *desc, int priority, const char **tags, si
     time_t now = time(NULL) ;
     struct tm *tm = localtime(&now) ;
     char buf[64] ;
-    strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", tm) ;
+    // strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", tm) ;
+    strftime(buf, sizeof(buf), "%d/%m/%Y - %H:%M", tm) ;
     t->created_at = strdup_nullsafe(buf) ;
     t->desc = strdup_nullsafe(desc) ;
 
@@ -134,6 +135,7 @@ int load_tasks(TaskList *tl) {
         if (!cJSON_IsObject(obj)) continue ;
         int id = cJSON_GetObjectItem(obj, "id")->valueint ;
         bool done = cJSON_IsTrue(cJSON_GetObjectItem(obj, "done")) ;
+        int priority = cJSON_GetObjectItem(obj, "priority")->valueint ;
         const char *created = cJSON_GetObjectItem(obj, "created_at")->valuestring ;
         const char *desc = cJSON_GetObjectItem(obj, "desc")->valuestring ;
 
@@ -141,6 +143,7 @@ int load_tasks(TaskList *tl) {
         Task *t = &tl->items[tl->len] ;
         t->id = id ;
         t->done = done ;
+        t->priority = priority ;
         t->created_at = strdup_nullsafe(created) ;
         t->desc = strdup_nullsafe(desc) ;
         if (!t->created_at || !t->desc) { free_task(t) ; continue ; }
