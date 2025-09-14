@@ -7,13 +7,12 @@ static void usage(const char *prog) {
     printf("Usage: %s <command> [args]\n", prog) ;
     printf("Commands:\n") ;
     printf("    add <description> [-p --priority <1-3> | -t --tags [<tag1> <tag2>...<tag10>]]   Add a task\n") ;
-    printf("    list [-a --all]        List tasks (default: only pending)\n") ;
-    printf("    done <id>           Mark task as done\n") ;
-    printf("    rm <id>             Remove task\n") ;
+    printf("    list [-a --all] [-t --tag <tag>]        List tasks (default: only pending)\n") ;
+    printf("    done <id>                               Mark task as done\n") ;
+    printf("    rm <id>                                 Remove task\n") ;
 }
 
 // TODO add --tag option to list command
-// TODO add simplified option (eg: --priority, -p)
 int main(int argc, char **argv) {
     if (argc < 2) { usage(argv[0]) ; return 1 ; }
 
@@ -64,11 +63,27 @@ int main(int argc, char **argv) {
         printf("added task %d\n", id);
     } else if (strcmp(cmd, "list") == 0) {
         bool show_all = false ;
-        if (argc >= 3 && (strcmp(argv[2], "--all") == 0 || strcmp(argv[2], "-a") == 0)) show_all = true ;
+        const char *filter_tag = NULL ;
+
+        for (int i = 2 ; i < argc ; i++) {
+            if (strcmp(argv[i], "--all") == 0 || strcmp(argv[i], "-a") == 0) { show_all = true ; }
+            else if ((strcmp(argv[i], "--tag") == 0 || strcmp(argv[i], "-t") == 0) && i + 1 < argc) { filter_tag = argv[++i] ; }
+        }
 
         for (size_t i=0 ; i<tl.len ; i++) {
             Task *t = &tl.items[i] ;
             if (!show_all && t->done) continue ;
+
+            if (filter_tag) {
+                bool has_tag = false ;
+                for (size_t j = 0 ; j < t->tag_count ; j++) {
+                    if (strcmp(t->tags[j], filter_tag) == 0) {
+                        has_tag = true ;
+                        break ;
+                    }
+                }
+                if (!has_tag) continue ;
+            }
 
             printf("%d [%c] (prio:%d) %s\n  -> %s\n", t->id, t->done ? 'x' : ' ',t->priority,  t->created_at ? t->created_at : " ", t->desc ? t->desc : " ") ;
 
