@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#define DB_PATH "data/tasks.json"
+// #define DB_PATH "/home/ethan/.local/share/ctask_manager/tasks.json"
 
 typedef struct {
     int id;

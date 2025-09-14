@@ -4,6 +4,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <sys/stat.h>
+
+const char *get_db_path(void) {
+    static char path[512] ;
+    const char *home = getenv("HOME") ;
+    if (!home) home = "." ;
+    snprintf(path, sizeof(path), "%s/.local/share/ctask_manager/tasks.json", home) ;
+    return path ;
+}
 
 static char *strdup_nullsafe(const char *s) {
     if (!s) return NULL ;
@@ -115,7 +124,7 @@ int remove_task(TaskList *tl, int id) {
 }
 
 int load_tasks(TaskList *tl) {
-    FILE *f = fopen(DB_PATH, "r") ;
+    FILE *f = fopen(get_db_path(), "r") ;
     if (!f) return 0 ;
     fseek(f, 0, SEEK_END) ;
     long len = ftell(f) ;
@@ -189,7 +198,7 @@ int save_tasks(const TaskList *tl) {
     char *out = cJSON_Print(root) ;
     cJSON_Delete(root) ;
 
-    FILE *f = fopen(DB_PATH, "w") ;
+    FILE *f = fopen(get_db_path(), "w") ;
     if (!f) { free(out) ; return -1 ; }
     fputs(out, f) ;
     fclose(f) ;
