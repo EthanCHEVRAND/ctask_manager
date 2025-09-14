@@ -31,6 +31,10 @@ This creates 'bin/task'.
 
 ## Installation
 ```bash
+git clone https://github.com/EthanCHEVRAND/ctask_manager.git
+```
+
+```bash
 ./install.sh
 ```
 This creates everything needed for the tool to work, so no need to run make alongside it.
