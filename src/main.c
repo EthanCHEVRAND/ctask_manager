@@ -3,6 +3,11 @@
 #include <string.h>
 #include "tasks.h"
 
+#define ANSI_COLOR_RED "\x1b[31m"
+#define ANSI_COLOR_GREEN "\x1b[32m"
+#define ANSI_COLOR_CYAN "\x1b[36m"
+#define ANSI_COLOR_RESET "\x1b[0m"
+
 static void usage(const char *prog) {
     printf("Usage: %s <command> [args]\n", prog) ;
     printf("Commands:\n") ;
@@ -23,7 +28,7 @@ int main(int argc, char **argv) {
     const char *cmd = argv[1] ;
     if (strcmp(cmd, "add") == 0) {
         if (argc < 3) {
-            fprintf(stderr, "missing description\n");
+            fprintf(stderr, ANSI_COLOR_RED"missing description\n"ANSI_COLOR_RESET);
             return 1;
         }
 
@@ -54,21 +59,24 @@ int main(int argc, char **argv) {
 
         int id = add_task(&tl, desc_buf, priority, tags, tag_count);
         if (id < 0) {
-            fprintf(stderr, "failed to add task\n");
+            fprintf(stderr, ANSI_COLOR_RED"failed to add task\n"ANSI_COLOR_RESET);
             tasklist_free(&tl);
             return 1;
         }
 
         save_tasks(&tl);
-        printf("added task %d\n", id);
+        printf(ANSI_COLOR_GREEN"added task %d\n"ANSI_COLOR_RESET, id);
     } else if (strcmp(cmd, "list") == 0) {
         bool show_all = false ;
         const char *filter_tag = NULL ;
+        int prio = 0;
 
         for (int i = 2 ; i < argc ; i++) {
             if (strcmp(argv[i], "--all") == 0 || strcmp(argv[i], "-a") == 0) { show_all = true ; }
             else if ((strcmp(argv[i], "--tag") == 0 || strcmp(argv[i], "-t") == 0) && i + 1 < argc) { filter_tag = argv[++i] ; }
+            else if ((strcmp(argv[i], "--priority") == 0 || strcmp(argv[i], "-p") == 0) && i + 1 < argc) { prio = atoi(argv[++i]) ; }
         }
+        printf(ANSI_COLOR_CYAN"Showing tasks\n"ANSI_COLOR_RESET) ;
 
         for (size_t i=0 ; i<tl.len ; i++) {
             Task *t = &tl.items[i] ;
@@ -84,34 +92,41 @@ int main(int argc, char **argv) {
                 }
                 if (!has_tag) continue ;
             }
+            if (prio != 0) {
+                bool has_prio = false ;
+                if (prio == t->priority) {
+                    has_prio = true ;
+                }
+                if (!has_prio) continue ;
+            }
 
-            printf("%d [%c] (prio:%d) %s\n  -> %s\n", t->id, t->done ? 'x' : ' ',t->priority,  t->created_at ? t->created_at : " ", t->desc ? t->desc : " ") ;
+            printf("\n%d [%c] (prio:%d) %s\n  -> %s\n", t->id, t->done ? 'x' : ' ',t->priority,  t->created_at ? t->created_at : " ", t->desc ? t->desc : " ") ;
 
             if (t->tag_count > 0) {
                 printf(" (tags: ") ;
                 for (size_t j = 0 ; j < t->tag_count ; j++) {
-                    printf("%s%s", t->tags[j], j+1 < t->tag_count ? ", ": "") ;
+                    printf(ANSI_COLOR_CYAN"%s%s"ANSI_COLOR_RESET, t->tags[j], j+1 < t->tag_count ? ", ": "") ;
                 }
                 printf(")") ;
             }
             printf("\n") ;
         }
     } else if (strcmp(cmd, "done") == 0) {
-        if (argc < 3) { fprintf(stderr, "missing id\n") ; return 1 ; }
+        if (argc < 3) { fprintf(stderr, ANSI_COLOR_RED"missing id\n"ANSI_COLOR_RESET) ; return 1 ; }
 
         int id = atoi(argv[2]) ;
-        if (mark_done(&tl, id) != 0) { fprintf(stderr, "task not found\n") ; tasklist_free(&tl) ; return 1 ; }
+        if (mark_done(&tl, id) != 0) { fprintf(stderr, ANSI_COLOR_RED"task not found\n"ANSI_COLOR_RESET) ; tasklist_free(&tl) ; return 1 ; }
         save_tasks(&tl) ;
 
-        printf("marked %d done\n", id) ;
+        printf(ANSI_COLOR_GREEN"marked %d done\n"ANSI_COLOR_RESET, id) ;
     } else if (strcmp(cmd, "rm") == 0) {
-        if (argc < 3) { fprintf(stderr, "missing id\n") ; return 1 ; }
+        if (argc < 3) { fprintf(stderr, ANSI_COLOR_RED"missing id\n"ANSI_COLOR_RESET) ; return 1 ; }
 
         int id = atoi(argv[2]) ;
-        if (remove_task(&tl, id) != 0) { fprintf(stderr, "task not found\n") ; tasklist_free(&tl) ; return 1 ; }
+        if (remove_task(&tl, id) != 0) { fprintf(stderr, ANSI_COLOR_RED"task not found\n"ANSI_COLOR_RESET) ; tasklist_free(&tl) ; return 1 ; }
         save_tasks(&tl) ;
 
-        printf("removed %d\n", id) ;
+        printf(ANSI_COLOR_GREEN"removed %d\n"ANSI_COLOR_RESET, id) ;
     } else {
         usage(argv[0]) ;
         tasklist_free(&tl) ;

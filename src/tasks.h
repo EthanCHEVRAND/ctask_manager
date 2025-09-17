@@ -4,12 +4,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-// #define DB_PATH "/home/ethan/.local/share/ctask_manager/tasks.json"
-
 typedef struct {
     int id;
     bool done;
-    char *created_at; // ISO string
+    char *created_at;
     char *desc;
     int priority; // 1=important ; 2=default ; 3=low
     char **tags;
